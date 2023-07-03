@@ -11,15 +11,15 @@ import java.util.Random;
 @SuppressWarnings("serial")
 public class Game extends JPanel {
 
-    private final int BOX_SIZE = 32;
-    private final int GAME_SIZE = 16;
-    private ArrayList<Point> snake;
-    private Point fruit;
-    private int direction;
-    private Color fruitColor;
-    private int score;
-    private Timer timer;
-    private boolean gameOver;
+    private final int BOX_SIZE = 32;		// Grösse einer "Kiste" des Spielfelds
+    private final int GAME_SIZE = 16;		// Anzahl Kisten horizontal und vertikal
+    private ArrayList<Point> snake;			// Die Schlange, ein Array von Punkten
+    private Point fruit;					// Position der Frucht auf dem Spielfeld
+    private int direction;					// Aktuelle Bewegungsrichtung der Schlange
+    private Color fruitColor;				// Farbe der aktuell aktiven Frucht
+    private int score;						// Punktestand
+    private Timer timer;					// Timer für den Spielablauf
+    private boolean gameOver;				// Spielstatus
     
     public Game() {
         setPreferredSize(new Dimension(BOX_SIZE * GAME_SIZE, BOX_SIZE * GAME_SIZE));
@@ -55,30 +55,42 @@ public class Game extends JPanel {
         initGame();
     }
 
+    /**
+     * Initialisiert das Spiel.
+     */    
     private void initGame() {
     	gameOver = false;
     	if(timer != null && timer.isRunning()) {
     		return;
     	}
         snake = new ArrayList<>();
-        snake.add(new Point(GAME_SIZE / 2, GAME_SIZE / 2));
+        snake.add(new Point(GAME_SIZE / 2, GAME_SIZE / 2));	// Startposition der Schlange in der Mitte des Spielfelds
         spawnFruit();
         direction = -1;
         
         timer.start();
     }
 
+    /**
+     * Generiert eine neue Frucht an einer zufälligen Position auf dem Spielfeld.
+     * Die Position darf nicht von der Schlange eingenommen werden.
+     */
     private void spawnFruit() {
         Random random = new Random();
         int x, y;
         do {
-            x = random.nextInt(GAME_SIZE);
-            y = random.nextInt(GAME_SIZE);
-        } while (snake.contains(new Point(x, y)));
-        fruit = new Point(x, y);
+            x = random.nextInt(GAME_SIZE); // Zufällige x-Koordinate generieren
+            y = random.nextInt(GAME_SIZE); // Zufällige y-Koordinate generieren
+        } while (snake.contains(new Point(x, y))); // Überprüfen, ob die generierte Position bereits von der Schlange eingenommen wird
+        fruit = new Point(x, y); // Position der Frucht festlegen
         fruitColor = getRandomFruitColor();
     }
 
+    /**
+     * Beendet das Spiel.
+     * Stoppt den Timer und zeigt eine Meldung an, dass das Spiel vorbei ist.
+     * Initialisiert dann ein neues Spiel.
+     */    
     private void gameOver() {
     	gameOver = true;
         timer.stop();
@@ -86,6 +98,12 @@ public class Game extends JPanel {
         initGame();
     }
     
+    /**
+     * Überprüft, ob ein Punkt außerhalb des Spielfelds liegt.
+     *
+     * @param point der zu überprüfende Punkt
+     * @return true, wenn der Punkt außerhalb des Spielfelds liegt, ansonsten false
+     */    
     private boolean isOutOfBounds(Point point) {
         return point.x < 0 || point.y < 0 || point.x >= GAME_SIZE || point.y >= GAME_SIZE;
     }
@@ -99,13 +117,24 @@ public class Game extends JPanel {
         return false;
     }*/
 
+    /**
+     * Überprüft, ob ein gegebener Punkt mit dem Körper der Schlange kollidiert.
+     *
+     * @param newPoint der zu überprüfende Punkt
+     * @return true, wenn der Punkt mit dem Körper der Schlange kollidiert, ansonsten false
+     */    
     private boolean checkSnakeCollision(Point newPoint) {
         return snake.contains(newPoint);
     }
     
+    
+    /**
+     * Aktualisiert den Spielzustand.
+     * Wird vom Timer in regelmäßigen Abständen aufgerufen.
+     */    
     private void updateGame() {
     	if (!gameOver && direction != -1) {
-    		Point head = snake.get(snake.size() - 1);
+    		Point head = snake.get(snake.size() - 1);	// Kopf der Schlange holen
             Point newPoint;
             switch (direction) {
                 case 0: // UP
@@ -126,16 +155,21 @@ public class Game extends JPanel {
                 return;
             }            
            
-            snake.add(newPoint);
-            if (newPoint.equals(fruit)) {
-            	score += getFruitScore();
-                spawnFruit();
+            snake.add(newPoint);	// Neuen Punkt (Kopf) zur Schlange hinzufügen
+            if (newPoint.equals(fruit)) {	
+            	score += getFruitScore();	// Punktestand erhöhen, wenn der Kopf die Frucht erreicht
+                spawnFruit();	// Neue Frucht erzeugen
             } else {
-                snake.remove(0);
+                snake.remove(0);	// Schwanz der Schlange entfernen, da sie sich nicht zur Frucht bewegt hat
             }
         }
     }
 
+    /**
+     * Gibt den Punktwert der aktuellen Frucht zurück.
+     *
+     * @return der Punktwert der aktuellen Frucht
+     */
     private int getFruitScore() {
         if (fruitColor.equals(Color.YELLOW)) {
             return 1;
@@ -154,10 +188,17 @@ public class Game extends JPanel {
         }
     }
     
+    /**
+     * Überschreibt die paintComponent-Methode der JPanel-Klasse.
+     * Zeichnet das Spielfeld, die Frucht und die Schlange auf den Bildschirm.
+     *
+     * @param g der Graphics-Kontext zum Zeichnen
+     */
     @Override
-    public void paintComponent(Graphics g) {
+     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         
+        // Spielfeld-Kisten malen
 		g.setColor(Color.DARK_GRAY);
 		for (int x = 0; x < GAME_SIZE; x++) {
 			for (int y = 0; y < GAME_SIZE; y++) {
@@ -165,53 +206,56 @@ public class Game extends JPanel {
 			}
 		}
 
-		// Draw the fruit
+		// Frucht zeichnen
         g.setColor(fruitColor);
         g.fillRect(fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2, 20, 20);
 
+        // Testweise den Punktewert der aktuellen Frucht ausgeben: 
         g.setColor(Color.YELLOW);
         String tmp = "" + getFruitScore();
         g.drawString(tmp, fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2);
 
-        // Draw the snake
+        
+        // Schlange zeichnen
         g.setColor(Color.GREEN);
         for (int i = 0; i < snake.size(); i++) {
             Point p = snake.get(i);
             if (i == snake.size() - 1) {
-                // Draw the head as a red circle
+            	// Kopf als roten Kreis zeichnen
                 g.setColor(Color.RED);
                 g.fillOval(p.x * BOX_SIZE, p.y * BOX_SIZE, BOX_SIZE, BOX_SIZE);
             } else {
-                // Draw the body as green circles
+            	// Körper als grüne Kreise zeichnen
                 g.setColor(Color.GREEN);
                 g.fillOval(p.x * BOX_SIZE + (BOX_SIZE - 20) / 2, p.y * BOX_SIZE + (BOX_SIZE - 20) / 2, 20, 20);
             }
         }
         
+        // Punktestand anzeigen
         g.setColor(Color.WHITE);
         g.drawString("Score: " + score, 10, 20);
     }
 
+    
+    /**
+     * Gibt eine zufällige Farbe für die Frucht zurück.
+     *
+     * @return eine zufällige Farbe für die Frucht
+     */    
     private Color getRandomFruitColor() {
+    	Color[] colors = { Color.YELLOW, Color.ORANGE, Color.CYAN, Color.WHITE, Color.PINK, Color.MAGENTA };
+    	
         Random random = new Random();
-        int colorIndex = random.nextInt(6); // Generate a random number between 0 and 5
-        
-        switch (colorIndex) {
-            case 0:
-                return Color.YELLOW;
-            case 1:
-                return Color.ORANGE;
-            case 2:
-                return Color.CYAN;
-            case 3:
-                return Color.WHITE;
-            case 4:
-                return Color.PINK;
-            default:
-                return Color.MAGENTA;
-        }
+        int colorIndex = random.nextInt(colors.length); 
+        return colors[colorIndex];
     }
 
+    /**
+     * Der Einstiegspunkt des Programms.
+     * Erzeugt ein JFrame, fügt das Game-Objekt hinzu und zeigt das Fenster an.
+     *
+     * @param args die Kommandozeilenargumente (werden ignoriert)
+     */
     public static void main(String[] args) {
         JFrame frame = new JFrame("Auch Snake.");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
