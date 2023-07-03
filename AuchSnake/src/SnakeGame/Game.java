@@ -7,9 +7,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyAdapter;
 import java.util.ArrayList;
 import java.util.Random;
+import SnakeGame.StarField;
 
 @SuppressWarnings("serial")
-public class Game extends JPanel {
+public class Game extends StarField {
 
     private final int BOX_SIZE = 32;		// Grösse einer "Kiste" des Spielfelds
     private final int GAME_SIZE = 16;		// Anzahl Kisten horizontal und vertikal
