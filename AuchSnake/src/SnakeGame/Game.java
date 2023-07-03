@@ -1,6 +1,7 @@
 package SnakeGame;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyAdapter;
@@ -17,6 +18,8 @@ public class Game extends JPanel {
     private int direction;
     private Color fruitColor;
     private int score;
+    private Timer timer;
+    private boolean gameOver;
     
     public Game() {
         setPreferredSize(new Dimension(BOX_SIZE * GAME_SIZE, BOX_SIZE * GAME_SIZE));
@@ -41,24 +44,28 @@ public class Game extends JPanel {
                 }
             }
         });
+        
+        timer = new Timer(200, e -> {
+            if (!gameOver) {
+                updateGame();
+                repaint();
+            } 
+        });
+        
         initGame();
     }
 
     private void initGame() {
+    	gameOver = false;
+    	if(timer != null && timer.isRunning()) {
+    		return;
+    	}
         snake = new ArrayList<>();
         snake.add(new Point(GAME_SIZE / 2, GAME_SIZE / 2));
         spawnFruit();
         direction = -1;
-        new Timer(200, e -> {
-            if (!gameOver()) {
-                updateGame();
-                repaint();
-            } else {
-                ((Timer)e.getSource()).stop();
-                JOptionPane.showMessageDialog(this, "Game Over!", "Game Over!", JOptionPane.ERROR_MESSAGE);
-                initGame();
-            }
-        }).start();
+        
+        timer.start();
     }
 
     private void spawnFruit() {
@@ -72,27 +79,33 @@ public class Game extends JPanel {
         fruitColor = getRandomFruitColor();
     }
 
-    private boolean gameOver() {
-        Point head = snake.get(snake.size() - 1);
-        
-        // Check if the head is out of bounds
-        if (head.x < 0 || head.y < 0 || head.x >= GAME_SIZE || head.y >= GAME_SIZE) {
-            return true;
-        }
-        
-        // Check if the head collides with the body (excluding the last segment)
+    private void gameOver() {
+    	gameOver = true;
+        timer.stop();
+        JOptionPane.showMessageDialog(this, "Game Over!", "Game Over!", JOptionPane.ERROR_MESSAGE);
+        initGame();
+    }
+    
+    private boolean isOutOfBounds(Point point) {
+        return point.x < 0 || point.y < 0 || point.x >= GAME_SIZE || point.y >= GAME_SIZE;
+    }
+
+    /*private boolean checkBodyCollision(Point head) {
         for (int i = 0; i < snake.size() - 1; i++) {
             if (head.equals(snake.get(i))) {
                 return true;
             }
         }
-        
         return false;
-    }
+    }*/
 
+    private boolean checkSnakeCollision(Point newPoint) {
+        return snake.contains(newPoint);
+    }
+    
     private void updateGame() {
-        if (direction != -1) {
-            Point head = snake.get(snake.size() - 1);
+    	if (!gameOver && direction != -1) {
+    		Point head = snake.get(snake.size() - 1);
             Point newPoint;
             switch (direction) {
                 case 0: // UP
@@ -107,10 +120,12 @@ public class Game extends JPanel {
                 default: // LEFT
                     newPoint = new Point(head.x - 1, head.y);
             }
-            if (snake.contains(newPoint)) {
-                initGame();
+            
+            if (checkSnakeCollision(newPoint) || isOutOfBounds(newPoint)) {
+                gameOver();
                 return;
-            }
+            }            
+           
             snake.add(newPoint);
             if (newPoint.equals(fruit)) {
             	score += getFruitScore();
@@ -143,7 +158,14 @@ public class Game extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         
-        // Draw the fruit
+		g.setColor(Color.DARK_GRAY);
+		for (int x = 0; x < GAME_SIZE; x++) {
+			for (int y = 0; y < GAME_SIZE; y++) {
+				g.drawRect(x * BOX_SIZE, y * BOX_SIZE, BOX_SIZE, BOX_SIZE);
+			}
+		}
+
+		// Draw the fruit
         g.setColor(fruitColor);
         g.fillRect(fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2, 20, 20);
 
@@ -151,8 +173,6 @@ public class Game extends JPanel {
         String tmp = "" + getFruitScore();
         g.drawString(tmp, fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2);
 
-        
-        
         // Draw the snake
         g.setColor(Color.GREEN);
         for (int i = 0; i < snake.size(); i++) {
