@@ -15,7 +15,9 @@ public class Game extends JPanel {
     private ArrayList<Point> snake;
     private Point fruit;
     private int direction;
-
+    private Color fruitColor;
+    private int score;
+    
     public Game() {
         setPreferredSize(new Dimension(BOX_SIZE * GAME_SIZE, BOX_SIZE * GAME_SIZE));
         setBackground(Color.BLACK);
@@ -67,6 +69,7 @@ public class Game extends JPanel {
             y = random.nextInt(GAME_SIZE);
         } while (snake.contains(new Point(x, y)));
         fruit = new Point(x, y);
+        fruitColor = getRandomFruitColor();
     }
 
     private boolean gameOver() {
@@ -110,6 +113,7 @@ public class Game extends JPanel {
             }
             snake.add(newPoint);
             if (newPoint.equals(fruit)) {
+            	score += getFruitScore();
                 spawnFruit();
             } else {
                 snake.remove(0);
@@ -117,13 +121,37 @@ public class Game extends JPanel {
         }
     }
 
+    private int getFruitScore() {
+        if (fruitColor.equals(Color.YELLOW)) {
+            return 1;
+        } else if (fruitColor.equals(Color.ORANGE)) {
+            return 2;
+        } else if (fruitColor.equals(Color.CYAN)) {
+            return 3;
+        } else if (fruitColor.equals(Color.WHITE)) {
+            return 4;
+        } else if (fruitColor.equals(Color.PINK)) {
+            return 5;
+        } else if (fruitColor.equals(Color.MAGENTA)) {
+            return 6;
+        } else {
+            return 0;
+        }
+    }
+    
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         
         // Draw the fruit
-        g.setColor(getRandomFruitColor());
+        g.setColor(fruitColor);
         g.fillRect(fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2, 20, 20);
+
+        g.setColor(Color.YELLOW);
+        String tmp = "" + getFruitScore();
+        g.drawString(tmp, fruit.x * BOX_SIZE + (BOX_SIZE - 20) / 2, fruit.y * BOX_SIZE + (BOX_SIZE - 20) / 2);
+
+        
         
         // Draw the snake
         g.setColor(Color.GREEN);
@@ -139,6 +167,9 @@ public class Game extends JPanel {
                 g.fillOval(p.x * BOX_SIZE + (BOX_SIZE - 20) / 2, p.y * BOX_SIZE + (BOX_SIZE - 20) / 2, 20, 20);
             }
         }
+        
+        g.setColor(Color.WHITE);
+        g.drawString("Score: " + score, 10, 20);
     }
 
     private Color getRandomFruitColor() {
